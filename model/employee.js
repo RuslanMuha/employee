@@ -1,3 +1,4 @@
+
 const mongoose = require('mongoose');
 
 const Schema = mongoose.Schema;
@@ -36,8 +37,13 @@ const employeeSchema = new Schema({
         type: String,
         required: true
     }
-},
-    { autoIndex: false });
+    // ,
+    //     companyId: {
+    //         type: Schema.Types.ObjectId,
+    //         ref: 'Company',
+    //         required: true
+    //     }
+});
 
 
 module.exports = mongoose.model('Employee', employeeSchema);

@@ -12,6 +12,7 @@ router.get("/",EmployeeController.getEmployee);
 router.get('/all',EmployeeController.getEmployees);
 
 router.get('/salary',EmployeeController.getSalary);
+router.get('/company',EmployeeController.getCompany);
 
 
 module.exports = router;

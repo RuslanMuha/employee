@@ -4,15 +4,25 @@ const Schema = mongoose.Schema;
 
 const companySchema = new Schema({
         companyName: {
-            type:String,
-            required:true
+            type: String,
+            index: true
         },
-        salary: {
+        salaryBudget: {
             type: Number,
-            required: true
         },
-    },
-    {autoIndex: false});
+        quantity: {type: Number},
+        employees: {
+            peoples: [{
+                id: {
+                    type: Schema.Types.ObjectId,
+                    ref: 'Employee',
+                    index: true,
+                    unique: true,
+                    required: true
+                }
+            }],
 
+        }
+    });
 
 module.exports = mongoose.model('Company', companySchema);
