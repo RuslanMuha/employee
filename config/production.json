@@ -1,0 +1,12 @@
+{
+
+  "morgan_format": "combined",
+  "skip_code": 400,
+  "db": {
+    "username": "ruslan",
+    "password": "",
+    "hostname": "cluster0-ijwfb.mongodb.net",
+    "database": "employee"
+  }
+
+}
