@@ -18,36 +18,48 @@ const schema = Joi.object().keys({
 });
 
 exports.addEmployee = async (req, res) => {
-    const companyName = req.body.companyName;
+    const {companyName} = req.body;
     const employee = new Employee(req.body);
     const company = new Company();
 
-    try {
-        if (!validate(req, res, schema)) {
-            res.send(false);
-            return;
-        }
+    if (!validate(req, res, schema)) {
+        res.send(false);
+        return;
+    }
 
+    try {
+        await employee.save();
+
+    } catch (e) {
+        res.send(false);
+        return;
+    }
+    try {
         const comp = await Company.findOne({companyName});
+        let result = [];
         if (!comp) {
             company.companyName = companyName;
             company.salaryBudget = employee.salary;
             company.quantity = 1;
             company.employees.peoples.push({id: employee._id});
-            company.save();
+            await company.save();
         } else {
+
             comp.salaryBudget = comp.salaryBudget + employee.salary;
             comp.quantity = comp.quantity + 1;
-            comp.employees.peoples.push({id: employee._id});
-            comp.save();
+            result = [...comp.employees.peoples];
+            result.push({id: employee._id});
+            comp.employees.peoples = [...result];
+            await comp.save();
         }
+        return res.send(true);
 
-        await employee.save();
-        return res.send(true)
 
     } catch (e) {
-        console.log(e);
+        await removeEmployee(employee.id);
         res.send(false);
+
+
     }
 
 
@@ -58,29 +70,37 @@ exports.removeEmployee = async (req, res) => {
     if (!id) {
         res.statusCode(400).send(false);
     }
-try{
+    try {
+        await removeEmployeeFromCompany(id);
+        res.send(true)
+    } catch (e) {
+        res.send(false)
+    }
+
+
+};
+
+async function removeEmployeeFromCompany(id) {
+
     const empl = await Employee.findOne({id});
     const companyName = empl.companyName;
     await Company.findOne({companyName}).then(async com => {
         com.salaryBudget = com.salaryBudget - empl.salary;
-        com.quantity = com.quantity -1;
+        com.quantity = com.quantity - 1;
         com.employees.peoples = com.employees.peoples.filter(res => {
-            return res.id.toString() !== empl._id.toString();
+            return res.id.toString() !== empl.id.toString();
         });
         await com.save();
         await Employee.findOneAndDelete({id});
-        res.send(true);
+
     });
-}catch (e) {
-    res.send(false);
+
+
 }
 
-
-
-
-
-
-};
+async function removeEmployee(id) {
+    await Employee.findOneAndDelete({id});
+}
 
 exports.getEmployee = async (req, res) => {
     const id = req.query.id;
@@ -117,6 +137,7 @@ exports.getCompany = async (req, res) => {
         const empl = await Company.findOne({companyName})
             .populate('employees.peoples.id');
 
+
         res.send(empl);
 
     } catch (e) {
@@ -131,8 +152,8 @@ exports.getSalary = async (req, res) => {
         console.log();
         res.send(`${comp.salaryBudget}`);
 
-    }catch (e) {
-       res.send(false)
+    } catch (e) {
+        res.send(false)
     }
 
 };
