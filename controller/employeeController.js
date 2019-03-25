@@ -36,7 +36,6 @@ exports.addEmployee = async (req, res) => {
     }
     try {
         const comp = await Company.findOne({companyName});
-        let result = [];
         if (!comp) {
             company.companyName = companyName;
             company.salaryBudget = employee.salary;
@@ -47,9 +46,7 @@ exports.addEmployee = async (req, res) => {
 
             comp.salaryBudget = comp.salaryBudget + employee.salary;
             comp.quantity = comp.quantity + 1;
-            result = [...comp.employees.peoples];
-            result.push({id: employee._id});
-            comp.employees.peoples = [...result];
+            comp.employees.peoples.push({id: employee._id});
             await comp.save();
         }
         return res.send(true);
