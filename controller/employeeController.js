@@ -4,7 +4,6 @@ const MODEL_PATH = '../model';
 const Employee = require(MODEL_PATH + '/employee');
 const Company = require(MODEL_PATH + '/company');
 
-
 const schema = Joi.object().keys({
     id: Joi.number().required(),
     emailAddress: Joi.string().email().regex(/^\S+@\S+$/).required(),
@@ -17,10 +16,11 @@ const schema = Joi.object().keys({
 
 });
 
+
+
 exports.addEmployee = async (req, res) => {
-    const {companyName} = req.body;
     const employee = new Employee(req.body);
-    const company = new Company();
+    const {companyName, salary, _id} = employee;
 
     if (!validate(req, res, schema)) {
         res.send(false);
@@ -37,24 +37,24 @@ exports.addEmployee = async (req, res) => {
     try {
         const comp = await Company.findOne({companyName});
         if (!comp) {
+            const company = new Company();
             company.companyName = companyName;
-            company.salaryBudget = employee.salary;
+            company.salaryBudget = salary;
             company.quantity = 1;
             company.employees.peoples.push({id: employee._id});
             await company.save();
         } else {
-
-            comp.salaryBudget = comp.salaryBudget + employee.salary;
-            comp.quantity = comp.quantity + 1;
-            comp.employees.peoples.push({id: employee._id});
-            await comp.save();
+            await Company.updateMany({"companyName": companyName}, {
+                $inc: {"salaryBudget": salary, "quantity": 1},
+                $addToSet: {"employees.peoples": {id: _id}}
+            });
         }
         return res.send(true);
 
 
     } catch (e) {
         await removeEmployee(employee.id);
-        res.send(false);
+        res.send(e);
 
 
     }
@@ -81,7 +81,7 @@ async function removeEmployeeFromCompany(id) {
 
     const empl = await Employee.findOne({id});
     const companyName = empl.companyName;
-    await Company.findOne({companyName}).then(async com => {
+    Company.findOne({companyName}).then(async com => {
         com.salaryBudget = com.salaryBudget - empl.salary;
         com.quantity = com.quantity - 1;
         com.employees.peoples = com.employees.peoples.filter(res => {

@@ -18,7 +18,7 @@ const companySchema = new Schema({
                     ref: 'Employee',
                     index: true,
                     unique: true,
-                    required: true
+                     required: true
                 }
             }],
 

@@ -7,8 +7,14 @@ const config = require('config');
 const path = require('path');
 const fs = require('fs');
 const employee = require('./routes/employee');
+
 const PORT = 8080;
 const app = express();
+
+
+const employeeCreation = require('./createEmployees');
+
+
 
 app.use(cores());
 app.use(express.json());
@@ -47,5 +53,10 @@ async function connect() {
     console.log('Connection is mongoDB is established')
 
 }
+
+
+employeeCreation().then(()=>{
+    process.exit(0)
+});
 connect();
 
