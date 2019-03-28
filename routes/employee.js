@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.post("/add", EmployeeController.addEmployee );
 
-router.delete("/remove",EmployeeController.removeEmployee );
+router.delete("/remove",EmployeeController.removeEmployeeFromCompany );
 
 router.get("/",EmployeeController.getEmployee);
 

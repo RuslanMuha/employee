@@ -19,7 +19,7 @@ const schema = Joi.object().keys({
 
 exports.addEmployee = async (req, res) => {
     const employee = new Employee(req.body);
-    const {companyName, salary, _id} = employee;
+    const {companyName, salary, _id,id} = employee;
 
     if (!validate(req, res, schema)) {
         res.send(false);
@@ -40,7 +40,7 @@ exports.addEmployee = async (req, res) => {
             company.employees.peoples.push({id: employee._id});
             await company.save();
         } else {
-            await Company.updateMany({"companyName": companyName}, {
+            await Company.updateMany({companyName}, {
                 $inc: {"salaryBudget": salary, "quantity": 1},
                 $addToSet: {"employees.peoples": {id: _id}}
             });
@@ -49,7 +49,7 @@ exports.addEmployee = async (req, res) => {
 
 
     } catch (e) {
-        await removeEmployee(employee.id);
+        await removeEmployee(id);
         res.send(e);
 
 
@@ -58,13 +58,13 @@ exports.addEmployee = async (req, res) => {
 
 };
 
-exports.removeEmployee = async (req, res) => {
+exports.removeEmployeeFromCompany = async (req, res) => {
     const id = req.query.id;
     if (!id) {
         res.statusCode(400).send(false);
     }
     try {
-        await removeEmployeeFromCompany(id);
+        await remove(id);
         res.send(true)
     } catch (e) {
         res.send(false)
@@ -73,7 +73,7 @@ exports.removeEmployee = async (req, res) => {
 
 };
 
-async function removeEmployeeFromCompany(id) {
+async function remove(id) {
 
     const employee = await Employee.findOne({id});
     const {companyName, salary, _id} = employee;
