@@ -55,8 +55,8 @@ async function connect() {
 }
 
 
-employeeCreation().then(()=>{
-    process.exit(0)
-});
+// employeeCreation().then(()=>{
+//     process.exit(0)
+// });
 connect();
 

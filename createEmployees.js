@@ -25,10 +25,7 @@ module.exports = async function createEmpl() {
         try {
             const comp = await Company.findOne({companyName});
             if (!comp) {
-                const company = new Company();
-                company.companyName = companyName;
-                company.salaryBudget = salary;
-                company.quantity = 1;
+                const company = new Company({companyName,salary,quantity:1});
                 company.employees.peoples.push({id: employee._id});
                 await company.save();
             } else {

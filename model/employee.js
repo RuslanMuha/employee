@@ -5,7 +5,7 @@ const Schema = mongoose.Schema;
 
 const employeeSchema = new Schema({
     id: {
-        type: Number,
+        type: String,
         index: true,
         unique: true,
         required: true

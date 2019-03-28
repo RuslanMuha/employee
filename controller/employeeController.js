@@ -17,7 +17,6 @@ const schema = Joi.object().keys({
 });
 
 
-
 exports.addEmployee = async (req, res) => {
     const employee = new Employee(req.body);
     const {companyName, salary, _id} = employee;
@@ -37,10 +36,7 @@ exports.addEmployee = async (req, res) => {
     try {
         const comp = await Company.findOne({companyName});
         if (!comp) {
-            const company = new Company();
-            company.companyName = companyName;
-            company.salaryBudget = salary;
-            company.quantity = 1;
+            const company = new Company({companyName, salaryBudget: salary, quantity: 1});
             company.employees.peoples.push({id: employee._id});
             await company.save();
         } else {
@@ -79,19 +75,18 @@ exports.removeEmployee = async (req, res) => {
 
 async function removeEmployeeFromCompany(id) {
 
-    const empl = await Employee.findOne({id});
-    const companyName = empl.companyName;
-    Company.findOne({companyName}).then(async com => {
-        com.salaryBudget = com.salaryBudget - empl.salary;
-        com.quantity = com.quantity - 1;
-        com.employees.peoples = com.employees.peoples.filter(res => {
-            return res.id.toString() !== empl.id.toString();
-        });
-        await com.save();
-        await Employee.findOneAndDelete({id});
-
+    const employee = await Employee.findOne({id});
+    const {companyName, salary, _id} = employee;
+    await Company.updateMany({companyName}, {
+        $inc: {"salaryBudget": -salary, "quantity": -1},
+        $pull: {"employees.peoples": {id: _id}}
     });
 
+    const {quantity} = await Company.findOne({companyName});
+    if (quantity === 0) {
+        await Company.findOneAndDelete({companyName})
+    }
+    await Employee.findOneAndDelete({_id});
 
 }
 
@@ -100,7 +95,7 @@ async function removeEmployee(id) {
 }
 
 exports.getEmployee = async (req, res) => {
-    const id = req.query.id;
+    const {id} = req.query;
     if (!id) {
         res.statusCode(400).send(false);
     }
@@ -146,7 +141,6 @@ exports.getSalary = async (req, res) => {
     const companyName = req.query.companyName;
     try {
         const comp = await Company.findOne({companyName});
-        console.log();
         res.send(`${comp.salaryBudget}`);
 
     } catch (e) {
