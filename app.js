@@ -40,6 +40,10 @@ app.use(morgan(format, {
 app.use('/employee', employee);
 app.use('/employee', auth);
 
+app.use((error, req,res, next)=>{
+   res.status(error.httpStatusCode).send(error.message)
+});
+
 async function connect() {
     const username = config.get('db.username');
     const password = config.get('db.password');

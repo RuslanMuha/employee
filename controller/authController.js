@@ -9,10 +9,16 @@ const nodemailer = require('nodemailer');
 const sendGridTransport = require('nodemailer-sendgrid-transport');
 const transporter = nodemailer.createTransport(sendGridTransport({
    auth:{
-       api_key:'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'
+       api_key: config.get("api_key")
    }
    
 }));
+
+function throwError(message,httpCode,next) {
+    const error = new Error(message);
+    error.httpStatusCode = httpCode;
+    return next(error);
+}
 
 
 const usersSchema = Joi.object().keys({
@@ -22,14 +28,15 @@ const usersSchema = Joi.object().keys({
     role: Joi.array().items(Joi.string().valid(['ADMIN', 'USER']))
 });
 
-exports.signup = async (req, res) => {
-    if (!validate(req, res, usersSchema)) {
-        return;
+exports.signup = async (req, res,next) => {
+    if (!validate(req, res, usersSchema,next)) {
+
+        return throwError('bad request',400,next);
     }
     const {email,password,confirmPassword} = req.body;
     if(password.toString() !== confirmPassword.toString()){
-        res.status(400).send('password does not match');
-        return;
+        return throwError('password does not match',400,next);
+
     }
     delete req.body.confirmPassword;
     try {
@@ -45,27 +52,26 @@ exports.signup = async (req, res) => {
         });
         res.send(user)
     } catch (e) {
-        res.send(false)
+        return throwError('server error',500,next);
     }
 };
 
-exports.login = async (req,res)=>{
+exports.login = async (req,res,next)=>{
     const {email, password} = req.body;
-    if (!validate(req, res, usersSchema)) {
-        return;
+    if (!validate(req, res, usersSchema,next)) {
+        return throwError('bad request',400,next);
     }
     try {
         const user = await User.findOne({email});
         if (!user || !await checkUser(user, password)) {
-            console.log("authorization error");
-            res.status(401).send("authorization error");
-            return;
+            return throwError("authorization error",401,next);
+
         }
         res.send(getJwt(user));
 
 
     } catch (e) {
-        res.status(401).send(false)
+        return throwError("server error",500,next);
     }
 };
 

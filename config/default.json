@@ -7,5 +7,6 @@
     "hostname": "cluster0-ijwfb.mongodb.net",
     "database": "employee"
   },
-  "jwtSecret": "werjgberklfjwrfre123k1jh"
+  "jwtSecret": "werjgberklfjwrfre123k1jh",
+  "api_key": "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"
 }

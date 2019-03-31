@@ -12,6 +12,8 @@ function createEmployees() {
     const title = faker.random.words();
     return {id,emailAddress,companyName,gender,name,salary,title}
 }
+
+
 module.exports = async function createEmpl() {
 
     const MODEL_PATH = './model';
@@ -38,8 +40,6 @@ module.exports = async function createEmpl() {
 
         } catch (e) {
             await Employee.findOneAndDelete({id});
-
-
 
         }
     }

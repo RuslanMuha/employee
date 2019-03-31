@@ -7,7 +7,7 @@ const Company = require(MODEL_PATH + '/company');
 
 const schema = Joi.object().keys({
     id: Joi.number().required(),
-    emailAddress: Joi.string().email().regex(/^\S+@\S+$/).required(),
+    emailAddress: Joi.string().email().required(),
     companyName: Joi.string().required(),
     gender: Joi.string().required(),
     name: Joi.string().required(),
@@ -18,26 +18,28 @@ const schema = Joi.object().keys({
 });
 
 
+function throwError(message,httpCode,next) {
+    const error = new Error(message);
+    error.httpStatusCode = httpCode;
+    return next(error);
+}
 
-
-exports.addEmployee = async (req, res) => {
+exports.addEmployee = async (req, res,next) => {
     const employee = new Employee(req.body);
     const {companyName, salary, _id, id} = employee;
 
-    if (!validate(req, res, schema)) {
-        res.send(false);
-        return;
+    if (!validate(req, res, schema,next)) {
+        return throwError('bad request',400,next);
     }
     if(!req.user){
-        res.status(401).send('authentication error');
-        return;
+        return throwError('authentication error',401,next);
     }
     try {
         await employee.save();
 
     } catch (e) {
-        res.send(false);
-        return;
+        return throwError('failed to save',500,next);
+
     }
     try {
         const comp = await Company.findOne({companyName});
@@ -55,8 +57,10 @@ exports.addEmployee = async (req, res) => {
 
 
     } catch (e) {
+
         await removeEmployee(id);
-        res.send(e);
+
+        return throwError('failed to save',500,next);
 
 
     }
@@ -64,20 +68,20 @@ exports.addEmployee = async (req, res) => {
 
 };
 
-exports.removeEmployeeFromCompany = async (req, res) => {
+exports.removeEmployeeFromCompany = async (req, res,next) => {
     const {id} = req.query;
     if (!id) {
         res.statusCode(400).send(false);
     }
     if(!req.user){
-        res.status(401).send('authentication error');
-        return;
+        return throwError('authentication error',401,next);
+
     }
     try {
         await remove(id);
         res.send(true)
     } catch (e) {
-        res.send(false)
+        return throwError('failed to remove',500,next);
     }
 
 
@@ -104,21 +108,21 @@ async function removeEmployee(id) {
     await Employee.findOneAndDelete({id});
 }
 
-exports.getEmployee = async (req, res) => {
+exports.getEmployee = async (req, res,next) => {
     const {id} = req.query;
     if (!id) {
-        res.statusCode(400).send(false);
+        return throwError('bad request',400,next);
     }
     try {
         const empl = await Employee.findOne({id});
         res.send(empl);
     } catch (e) {
-        res.send(false);
+        return throwError('server error',500,next);
     }
 
 };
 
-exports.getEmployees = async (req, res) => {
+exports.getEmployees = async (req, res,next) => {
     const result = {};
     try {
         const empls = await Employee.find().select('-__v -_id');
@@ -126,14 +130,14 @@ exports.getEmployees = async (req, res) => {
             result[empl.id] = empl;
         }
     } catch (e) {
-        res.send(e)
+        return throwError('server error',500,next);
     }
 
     res.send(result);
 
 };
 
-exports.getCompany = async (req, res) => {
+exports.getCompany = async (req, res,next) => {
     const companyName = req.query.companyName;
     try {
         const empl = await Company.findOne({companyName})
@@ -143,18 +147,18 @@ exports.getCompany = async (req, res) => {
         res.send(empl);
 
     } catch (e) {
-        res.send(e)
+       return throwError('server error',500,next);
     }
 
 };
-exports.getSalary = async (req, res) => {
+exports.getSalary = async (req, res,next) => {
     const companyName = req.query.companyName;
     try {
         const comp = await Company.findOne({companyName});
         res.send(`${comp.salaryBudget}`);
 
     } catch (e) {
-        res.send(false)
+        return throwError('server error',500,next);
     }
 
 };

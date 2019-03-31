@@ -1,10 +1,16 @@
 const jwt=require('jsonwebtoken');
 const config=require('config');
 
+function throwError(message, httpCode, next) {
+    const error = new Error(message);
+    error.httpStatusCode = httpCode;
+    return next(error);
+}
+
 module.exports=(req,res,next)=>{
     const token=req.header('x-auth-token');
     if(!token){
-        res.status(401).send("user isn't authorized");
+        return throwError("user isn't authorized",401,next);
     }
     else {
         try {
@@ -12,7 +18,7 @@ module.exports=(req,res,next)=>{
             next();
 
         }catch(e){
-            res.status(401).send('invalid token') ;
+            return throwError('invalid token',401,next);
         }
 
 
