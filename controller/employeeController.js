@@ -3,10 +3,6 @@ const Joi = require('joi');
 const MODEL_PATH = '../model';
 const Employee = require(MODEL_PATH + '/employee');
 const Company = require(MODEL_PATH + '/company');
-const bcrypt = require('bcryptjs');
-const config = require('config');
-const jwt = require('jsonwebtoken');
-const User = require(MODEL_PATH + '/user');
 
 
 const schema = Joi.object().keys({
@@ -69,9 +65,13 @@ exports.addEmployee = async (req, res) => {
 };
 
 exports.removeEmployeeFromCompany = async (req, res) => {
-    const id = req.query.id;
+    const {id} = req.query;
     if (!id) {
         res.statusCode(400).send(false);
+    }
+    if(!req.user){
+        res.status(401).send('authentication error');
+        return;
     }
     try {
         await remove(id);
@@ -158,57 +158,3 @@ exports.getSalary = async (req, res) => {
     }
 
 };
-
-// exports.signup = async (req, res) => {
-//     if (!validate(req, res, usersSchema)) {
-//         return;
-//     }
-//     try {
-//         let user = new User(req.body);
-//         await hashUserPassword(user);
-//         user = await user.save();
-//         res.send(user)
-//     } catch (e) {
-//         res.send(false)
-//     }
-// };
-//
-// exports.login = async (req,res)=>{
-//     const {email, password} = req.body;
-//     if (!validate(req, res, usersSchema)) {
-//         return;
-//     }
-//     try {
-//        const user = await User.findOne({email});
-//         if (!user || !await checkUser(user, password)) {
-//             console.log("authorization error");
-//             res.status(401).send("authorization error");
-//             return;
-//         }
-//         res.send(getJwt(user));
-//
-//
-//     } catch (e) {
-//         res.status(401).send(false)
-//     }
-// };
-//
-//
-// async function checkUser(user, password) {
-//     return await bcrypt.compare(password,user.password);
-// }
-//
-// function getJwt(user) {
-//     const secret = config.get('jwtSecret');
-//     if (!secret) {
-//         console.error("jwt secret isn't defined");
-//         process.exit(1);
-//     }
-//     return jwt.sign({_id:user._id},secret)
-// }
-// async function hashUserPassword(user) {
-//     user.password = await bcrypt.hash(user.password, 12)
-// }
-//
-
-

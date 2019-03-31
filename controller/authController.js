@@ -5,10 +5,20 @@ const config = require('config');
 const jwt = require('jsonwebtoken');
 const User = require(MODEL_PATH + '/user');
 const validate = require('../validation');
+const nodemailer = require('nodemailer');
+const sendGridTransport = require('nodemailer-sendgrid-transport');
+const transporter = nodemailer.createTransport(sendGridTransport({
+   auth:{
+       api_key:'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'
+   }
+   
+}));
+
 
 const usersSchema = Joi.object().keys({
     email: Joi.string().email(),
     password: Joi.string().min(8).regex(/[^\s]+/).required(),
+    confirmPassword: Joi.string().min(8).regex(/[^\s]+/).required(),
     role: Joi.array().items(Joi.string().valid(['ADMIN', 'USER']))
 });
 
@@ -16,10 +26,23 @@ exports.signup = async (req, res) => {
     if (!validate(req, res, usersSchema)) {
         return;
     }
+    const {email,password,confirmPassword} = req.body;
+    if(password.toString() !== confirmPassword.toString()){
+        res.status(400).send('password does not match');
+        return;
+    }
+    delete req.body.confirmPassword;
     try {
+
         let user = new User(req.body);
         await hashUserPassword(user);
         user = await user.save();
+        transporter.sendMail({
+            to: email,
+            from:'employeeCompany@node.com',
+            subject:'Sign up successful',
+            html:'<h1>You successfully signed up! </h1>'
+        });
         res.send(user)
     } catch (e) {
         res.send(false)
