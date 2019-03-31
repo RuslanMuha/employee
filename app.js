@@ -7,12 +7,14 @@ const config = require('config');
 const path = require('path');
 const fs = require('fs');
 const employee = require('./routes/employee');
+const auth = require('./routes/authentication');
 
 const PORT = 8080;
 const app = express();
 
 
-const employeeCreation = require('./createEmployees');
+// creating random workers
+//const employeeCreation = require('./createEmployees');
 
 
 
@@ -36,6 +38,7 @@ app.use(morgan(format, {
     skip: (req, res) => res.statusCode < skipCode
 }));
 app.use('/employee', employee);
+app.use('/employee', auth);
 
 async function connect() {
     const username = config.get('db.username');
