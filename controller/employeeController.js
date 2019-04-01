@@ -7,7 +7,7 @@ const Company = require(MODEL_PATH + '/company');
 
 const schema = Joi.object().keys({
     id: Joi.number().required(),
-    emailAddress: Joi.string().email().normalize().required(),
+    emailAddress: Joi.string().email().required(),
     companyName: Joi.string().required(),
     gender: Joi.string().required(),
     name: Joi.string().required(),
@@ -24,10 +24,21 @@ function throwError(message,httpCode,next) {
     return next(error);
 }
 
+function responseJSON(res,data,message) {
+    res.status(200).json({
+        status:'success',
+        code:200,
+        message:message,
+        data:data
+    });
+
+}
+
 exports.addEmployee = async (req, res,next) => {
     if(!validate(req, res, schema,next)){
         return;
     }
+    req.body.emailAddress = req.body.emailAddress.toLowerCase();
     const employee = new Employee(req.body);
     const {companyName, salary, _id, id} = employee;
 
@@ -54,7 +65,7 @@ exports.addEmployee = async (req, res,next) => {
                 $addToSet: {"employees.peoples": {id: _id}}
             });
         }
-        return res.send(true);
+        responseJSON(res,[],'adding successfully');
 
 
     } catch (e) {
@@ -80,7 +91,7 @@ exports.removeEmployeeFromCompany = async (req, res,next) => {
     }
     try {
         await remove(id);
-        res.send(true)
+        responseJSON(res,[],'removing successfully');
     } catch (e) {
         return throwError('failed to remove',500,next);
     }
@@ -116,7 +127,7 @@ exports.getEmployee = async (req, res,next) => {
     }
     try {
         const empl = await Employee.findOne({id});
-        res.send(empl);
+        responseJSON(res,empl,'success');
     } catch (e) {
         return throwError('server error',500,next);
     }
@@ -134,18 +145,18 @@ exports.getEmployees = async (req, res,next) => {
         return throwError('server error',500,next);
     }
 
-    res.send(result);
+    responseJSON(res,result,'success');
 
 };
 
 exports.getCompany = async (req, res,next) => {
     const companyName = req.query.companyName;
     try {
-        const empl = await Company.findOne({companyName})
+        const company = await Company.findOne({companyName})
             .populate('employees.peoples.id');
 
 
-        res.send(empl);
+        responseJSON(res,company,'success');
 
     } catch (e) {
        return throwError('server error',500,next);
@@ -156,7 +167,7 @@ exports.getSalary = async (req, res,next) => {
     const companyName = req.query.companyName;
     try {
         const comp = await Company.findOne({companyName});
-        res.send(`${comp.salaryBudget}`);
+        responseJSON(res,comp.salaryBudget,'success');
 
     } catch (e) {
         return throwError('server error',500,next);

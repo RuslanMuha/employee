@@ -41,9 +41,22 @@ app.use('/employee', employee);
 app.use('/employee', auth);
 
 app.use((error, req,res, next)=>{
-   res.status(error.httpStatusCode).send(error.message);
+    res.status(error.httpStatusCode).json({
+        status:'error',
+        code:error.httpStatusCode,
+        message:error.message,
+    });
 
 });
+
+// app.use((req,res,next)=>{
+//     res.status(error.httpStatusCode).json({
+//         status:'success',
+//         code:res.httpStatusCode,
+//         message:res.message,
+//         data:res.data
+//     });
+// });
 
 async function connect() {
     const username = config.get('db.username');

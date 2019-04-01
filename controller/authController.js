@@ -22,13 +22,23 @@ function throwError(message,httpCode,next) {
 
 
 const usersSchema = Joi.object().keys({
-    email: Joi.string().email().normalize(),
+    email: Joi.string().lowercase().email(),
     password: Joi.string().min(8).trim().required().strict(),
-    confirmPassword: Joi.string().valid(Joi.ref('password')).trim().required().strict().error(() => {
+    confirmPassword: Joi.string().valid(Joi.ref('password')).trim().strict().error(() => {
        return {message:"password do not match"}
     }),
     role: Joi.array().items(Joi.string().valid(['ADMIN', 'USER']))
 });
+
+function responseJSON(res,data,message) {
+    res.status(200).json({
+        status:'success',
+        code:200,
+        message:message,
+        data:data
+    });
+
+}
 
 exports.signup = async (req, res,next) => {
   if(!validate(req, res, usersSchema,next)){
@@ -37,6 +47,7 @@ exports.signup = async (req, res,next) => {
 
     delete req.body.confirmPassword;
     const {email} = req.body;
+    req.body.email = email.toLowerCase();
     try {
 
         let user = new User(req.body);
@@ -48,9 +59,11 @@ exports.signup = async (req, res,next) => {
             subject:'Sign up successful',
             html:'<h1>You successfully signed up! </h1>'
         });
-        res.send(user)
+        responseJSON(res,user,'successfully signed up');
+
+
     } catch (e) {
-        return throwError('server error',500,next);
+        return throwError('failed signed up',500,next);
     }
 };
 
@@ -66,11 +79,11 @@ exports.login = async (req,res,next)=>{
             return throwError("authorization error",401,next);
 
         }
-        res.send(getJwt(user));
+        responseJSON(res,getJwt(user),'successfully log in');
 
 
     } catch (e) {
-        return throwError("server error",500,next);
+        return throwError("failed log in",500,next);
     }
 };
 
