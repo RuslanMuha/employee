@@ -7,7 +7,7 @@ const Company = require(MODEL_PATH + '/company');
 
 const schema = Joi.object().keys({
     id: Joi.number().required(),
-    emailAddress: Joi.string().email().required(),
+    emailAddress: Joi.string().email().normalize().required(),
     companyName: Joi.string().required(),
     gender: Joi.string().required(),
     name: Joi.string().required(),
@@ -25,12 +25,13 @@ function throwError(message,httpCode,next) {
 }
 
 exports.addEmployee = async (req, res,next) => {
+    if(!validate(req, res, schema,next)){
+        return;
+    }
     const employee = new Employee(req.body);
     const {companyName, salary, _id, id} = employee;
 
-    if (!validate(req, res, schema,next)) {
-        return throwError('bad request',400,next);
-    }
+
     if(!req.user){
         return throwError('authentication error',401,next);
     }

@@ -11,7 +11,7 @@ const transporter = nodemailer.createTransport(sendGridTransport({
    auth:{
        api_key: config.get("api_key")
    }
-   
+
 }));
 
 function throwError(message,httpCode,next) {
@@ -22,23 +22,21 @@ function throwError(message,httpCode,next) {
 
 
 const usersSchema = Joi.object().keys({
-    email: Joi.string().email(),
-    password: Joi.string().min(8).regex(/[^\s]+/).required(),
-    confirmPassword: Joi.string().min(8).regex(/[^\s]+/).required(),
+    email: Joi.string().email().normalize(),
+    password: Joi.string().min(8).trim().required().strict(),
+    confirmPassword: Joi.string().valid(Joi.ref('password')).trim().required().strict().error(() => {
+       return {message:"password do not match"}
+    }),
     role: Joi.array().items(Joi.string().valid(['ADMIN', 'USER']))
 });
 
 exports.signup = async (req, res,next) => {
-    if (!validate(req, res, usersSchema,next)) {
+  if(!validate(req, res, usersSchema,next)){
+      return;
+  }
 
-        return throwError('bad request',400,next);
-    }
-    const {email,password,confirmPassword} = req.body;
-    if(password.toString() !== confirmPassword.toString()){
-        return throwError('password does not match',400,next);
-
-    }
     delete req.body.confirmPassword;
+    const {email} = req.body;
     try {
 
         let user = new User(req.body);
@@ -57,10 +55,11 @@ exports.signup = async (req, res,next) => {
 };
 
 exports.login = async (req,res,next)=>{
-    const {email, password} = req.body;
+
     if (!validate(req, res, usersSchema,next)) {
-        return throwError('bad request',400,next);
+        return ;
     }
+    const {email, password} = req.body;
     try {
         const user = await User.findOne({email});
         if (!user || !await checkUser(user, password)) {

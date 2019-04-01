@@ -41,7 +41,8 @@ app.use('/employee', employee);
 app.use('/employee', auth);
 
 app.use((error, req,res, next)=>{
-   res.status(error.httpStatusCode).send(error.message)
+   res.status(error.httpStatusCode).send(error.message);
+
 });
 
 async function connect() {

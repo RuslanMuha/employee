@@ -10,11 +10,10 @@ function getMessage(error) {
 }
 
 function validation(req,res,schema,next) {
-    const obj = res.body;
+    const obj = req.body;
     const result = Joi.validate(obj,schema);
-    console.log(`result: ${result.error}`);
     if(result.error){
-        return throwError(getMessage(result.error.details),400,next);
+        return throwError(getMessage(result.error.details),422,next);
     }
     return true;
 
