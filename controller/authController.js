@@ -22,12 +22,12 @@ function throwError(message,httpCode,next) {
 
 
 const usersSchema = Joi.object().keys({
-    email: Joi.string().lowercase().email(),
+    email: Joi.string().email(),
     password: Joi.string().min(8).trim().required().strict(),
     confirmPassword: Joi.string().valid(Joi.ref('password')).trim().strict().error(() => {
        return {message:"password do not match"}
     }),
-    role: Joi.array().items(Joi.string().valid(['ADMIN', 'USER']))
+    //role: Joi.array().items(Joi.string().valid(['ADMIN', 'USER']))
 });
 
 function responseJSON(res,data,message) {
@@ -44,7 +44,7 @@ exports.signup = async (req, res,next) => {
   if(!validate(req, res, usersSchema,next)){
       return;
   }
-
+    console.log(req.body);
     delete req.body.confirmPassword;
     const {email} = req.body;
     req.body.email = email.toLowerCase();
@@ -63,6 +63,7 @@ exports.signup = async (req, res,next) => {
 
 
     } catch (e) {
+        console.log(e);
         return throwError('failed signed up',500,next);
     }
 };

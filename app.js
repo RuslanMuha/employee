@@ -33,30 +33,22 @@ const stream = process.env.NODE_ENV === 'production' ? logStream : process.stdou
 
 fs.existsSync(path.resolve(__dirname,'logs')) || fs.mkdirSync(path.resolve(__dirname,'logs'));
 
-app.use(morgan(format, {
-    stream,
-    skip: (req, res) => res.statusCode < skipCode
-}));
+// app.use(morgan(format, {
+//     stream,
+//     skip: (req, res) => res.statusCode < skipCode
+// }));
 app.use('/employee', employee);
-app.use('/employee', auth);
+app.use('/user', auth);
 
 app.use((error, req,res, next)=>{
     res.status(error.httpStatusCode).json({
         status:'error',
         code:error.httpStatusCode,
         message:error.message,
+        data:[]
     });
 
 });
-
-// app.use((req,res,next)=>{
-//     res.status(error.httpStatusCode).json({
-//         status:'success',
-//         code:res.httpStatusCode,
-//         message:res.message,
-//         data:res.data
-//     });
-// });
 
 async function connect() {
     const username = config.get('db.username');
@@ -75,9 +67,9 @@ async function connect() {
 
 }
 
-
+//
 // employeeCreation().then(()=>{
-//     process.exit(0)
+//      process.exit(0)
 // });
 connect();
 

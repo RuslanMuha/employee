@@ -90,9 +90,10 @@ exports.removeEmployeeFromCompany = async (req, res,next) => {
 
     }
     try {
-        await remove(id);
-        responseJSON(res,[],'removing successfully');
+        const employee = await remove(id);
+        responseJSON(res,employee ,'removing successfully');
     } catch (e) {
+        console.log(e);
         return throwError('failed to remove',500,next);
     }
 
@@ -108,16 +109,16 @@ async function remove(id) {
         $pull: {"employees.peoples": {id: _id}}
     });
 
-    const {quantity} = await Company.findOne({companyName});
+   const {quantity} = await Company.findOne({companyName});
     if (quantity === 0) {
         await Company.findOneAndDelete({companyName})
     }
-    removeEmployee(id)
+  return await  removeEmployee(id)
 
 }
 
 async function removeEmployee(id) {
-    await Employee.findOneAndDelete({id});
+    return await Employee.findOneAndDelete({id});
 }
 
 exports.getEmployee = async (req, res,next) => {
@@ -126,7 +127,10 @@ exports.getEmployee = async (req, res,next) => {
         return throwError('bad request',400,next);
     }
     try {
-        const empl = await Employee.findOne({id});
+        let empl = await Employee.findOne({id});
+        if(!empl){
+           empl = {};
+        }
         responseJSON(res,empl,'success');
     } catch (e) {
         return throwError('server error',500,next);
@@ -167,9 +171,17 @@ exports.getSalary = async (req, res,next) => {
     const companyName = req.query.companyName;
     try {
         const comp = await Company.findOne({companyName});
-        responseJSON(res,comp.salaryBudget,'success');
+        let budget;
+        if(!comp){
+            budget = 0;
+        }
+        else {
+            budget = comp.salaryBudget;
+        }
 
+        responseJSON(res,budget,'success');
     } catch (e) {
+        console.log(e);
         return throwError('server error',500,next);
     }
 
