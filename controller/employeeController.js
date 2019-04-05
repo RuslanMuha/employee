@@ -157,8 +157,7 @@ exports.getCompany = async (req, res,next) => {
     const companyName = req.query.companyName;
     try {
         const company = await Company.findOne({companyName})
-            .populate('employees.peoples.id');
-
+            .populate('employees.peoples.id','-__v -_id');
 
         responseJSON(res,company,'success');
 
