@@ -9,7 +9,7 @@ const fs = require('fs');
 const employee = require('./routes/employee');
 const auth = require('./routes/authentication');
 
-const PORT = 8080;
+const PORT = 3000;
 const app = express();
 
 
