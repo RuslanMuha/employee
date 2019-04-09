@@ -42,14 +42,11 @@ exports.addEmployee = async (req, res,next) => {
     const employee = new Employee(req.body);
     const {companyName, salary, _id, id} = employee;
 
-
-    if(!req.user){
-        return throwError('authentication error',401,next);
-    }
     try {
         await employee.save();
 
     } catch (e) {
+
         return throwError('failed to save',500,next);
 
     }
@@ -65,13 +62,17 @@ exports.addEmployee = async (req, res,next) => {
                 $addToSet: {"employees.peoples": {id: _id}}
             });
         }
+        req.wss.clients.forEach(socket=>{
+            socket.send(JSON.stringify(req.body))
+        });
+
         responseJSON(res,[],'adding successfully');
 
 
     } catch (e) {
 
         await removeEmployee(id);
-
+        console.log(e);
         return throwError('failed to save',500,next);
 
 
@@ -85,13 +86,13 @@ exports.removeEmployeeFromCompany = async (req, res,next) => {
     if (!id) {
         res.statusCode(400).send(false);
     }
-    if(!req.user){
-        return throwError('authentication error',401,next);
 
-    }
     try {
         const employee = await remove(id);
+        const {companyName} = employee;
+         req.wss.clients.forEach(socket=>socket.send(JSON.stringify({id,companyName})));
         responseJSON(res,employee ,'removing successfully');
+
     } catch (e) {
         console.log(e);
         return throwError('failed to remove',500,next);

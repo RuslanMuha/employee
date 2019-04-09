@@ -11,11 +11,22 @@ const auth = require('./routes/authentication');
 require('./model/passport');
 
 const PORT = process.env.PORT || 3000;
+
 const app = express();
+const expressWs = require('express-ws')(app);
+const webServerSocket = expressWs.getWss();
 
+app.use((req,res,next)=>{
+    req.wss = webServerSocket;
+    next();
+});
 
+app.ws('/socket',(socket,req)=>{
+    console.log('socket is established')
+});
 // creating random workers
 //const employeeCreation = require('./utils/createEmployees');
+
 mongoose.set('useNewUrlParser', true);
 mongoose.set('useFindAndModify', false);
 mongoose.set('useCreateIndex', true);
