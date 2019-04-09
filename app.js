@@ -8,15 +8,17 @@ const path = require('path');
 const fs = require('fs');
 const employee = require('./routes/employee');
 const auth = require('./routes/authentication');
+require('./model/passport');
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const app = express();
 
 
 // creating random workers
 //const employeeCreation = require('./utils/createEmployees');
-
-
+mongoose.set('useNewUrlParser', true);
+mongoose.set('useFindAndModify', false);
+mongoose.set('useCreateIndex', true);
 
 app.use(cores());
 app.use(express.json());
@@ -33,10 +35,10 @@ const stream = process.env.NODE_ENV === 'production' ? logStream : process.stdou
 
 fs.existsSync(path.resolve(__dirname,'logs')) || fs.mkdirSync(path.resolve(__dirname,'logs'));
 
-// app.use(morgan(format, {
-//     stream,
-//     skip: (req, res) => res.statusCode < skipCode
-// }));
+app.use(morgan(format, {
+    stream,
+    skip: (req, res) => res.statusCode < skipCode
+}));
 app.use('/employee', employee);
 app.use('/user', auth);
 
