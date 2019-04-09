@@ -3,6 +3,7 @@ const MODEL_PATH = '../model';
 const bcrypt = require('bcryptjs');
 const config = require('config');
 const jwt = require('jsonwebtoken');
+const passport = require('passport');
 const User = require(MODEL_PATH + '/user');
 const validate = require('../validation');
 const nodemailer = require('nodemailer');
@@ -44,7 +45,6 @@ exports.signup = async (req, res,next) => {
   if(!validate(req, res, usersSchema,next)){
       return;
   }
-    console.log(req.body);
     delete req.body.confirmPassword;
     const {email} = req.body;
     req.body.email = email.toLowerCase();
@@ -53,12 +53,14 @@ exports.signup = async (req, res,next) => {
         let user = new User(req.body);
         await hashUserPassword(user);
         user = await user.save();
-        transporter.sendMail({
-            to: email,
-            from:'employeeCompany@node.com',
-            subject:'Sign up successful',
-            html:'<h1>You successfully signed up! </h1>'
-        });
+
+        //use sendGrid for sending email
+        // transporter.sendMail({
+        //     to: email,
+        //     from:'employeeCompany@node.com',
+        //     subject:'Sign up successful',
+        //     html:'<h1>You successfully signed up! </h1>'
+        // });
         responseJSON(res,user,'successfully signed up');
 
 
@@ -73,25 +75,22 @@ exports.login = async (req,res,next)=>{
     if (!validate(req, res, usersSchema,next)) {
         return ;
     }
-    const {email, password} = req.body;
     try {
-        const user = await User.findOne({email});
-        if (!user || !await checkUser(user, password)) {
-            return throwError("authorization error",401,next);
+        return passport.authenticate('local', {session: false}, (err, passportUser) => {
+            if(err) {
+                return next();
+            }
+            if(!passportUser) {
+                return res.status(400).json({error: 'error on login'});
+            }
+            responseJSON(res,getJwt(passportUser),'successfully log in');
 
-        }
-        responseJSON(res,getJwt(user),'successfully log in');
-
-
+        })(req, res, next);
     } catch (e) {
+        console.log(e);
         return throwError("failed log in",500,next);
     }
 };
-
-
-async function checkUser(user, password) {
-    return await bcrypt.compare(password,user.password);
-}
 
 function getJwt(user) {
     const secret = config.get('jwtSecret');
@@ -99,7 +98,15 @@ function getJwt(user) {
         console.error("jwt secret isn't defined");
         process.exit(1);
     }
-    return jwt.sign({_id:user._id},secret)
+    const today = new Date();
+    const expirationDate = new Date(today);
+    expirationDate.setDate(today.getDate() + 60);
+
+    return jwt.sign({
+        email: user.email,
+        id: user._id,
+        exp: parseInt(expirationDate.getTime()/1000, 10)
+    }, secret);
 }
 async function hashUserPassword(user) {
     user.password = await bcrypt.hash(user.password, 12)

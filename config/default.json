@@ -3,7 +3,7 @@
   "skip_code": 200,
   "db": {
     "username": "ruslan",
-    "password": "******",
+    "password": "2092426",
     "hostname": "cluster0-ijwfb.mongodb.net",
     "database": "employee"
   },
