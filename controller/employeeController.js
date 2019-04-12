@@ -51,17 +51,11 @@ exports.addEmployee = async (req, res,next) => {
 
     }
     try {
-        const comp = await Company.findOne({companyName});
-        if (!comp) {
-            const company = new Company({companyName, salaryBudget: salary, quantity: 1});
-            company.employees.peoples.push({id: employee._id});
-            await company.save();
-        } else {
-            await Company.updateMany({companyName}, {
-                $inc: {"salaryBudget": salary, "quantity": 1},
-                $addToSet: {"employees.peoples": {id: _id}}
-            });
-        }
+        await Company.updateMany({companyName}, {
+                    $set:{"companyName":companyName},
+                    $inc: {"salaryBudget": salary, "quantity": 1},
+                    $addToSet: {"employees.peoples": {id: _id}}
+                },{upsert:true});
         req.wss.clients.forEach(socket=>{
             socket.send(JSON.stringify(req.body))
         });
