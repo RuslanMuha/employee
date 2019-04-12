@@ -4,7 +4,7 @@
   "db": {
     "username": "ruslan",
     "password": "2092426",
-    "hostname": "cluster0-ijwfb.mongodb.net",
+    "hostname": "cluster0-y8fjw.mongodb.net",
     "database": "employee"
   },
   "N_EMPL_RANDOM": 10,
